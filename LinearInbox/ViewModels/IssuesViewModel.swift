@@ -96,6 +96,13 @@ final class IssuesViewModel: ObservableObject {
     }
 
     func openIssue(_ issue: Issue) {
+        // Validate URL is from Linear before opening
+        guard let originalURL = URL(string: issue.url),
+              let host = originalURL.host,
+              host == "linear.app" || host.hasSuffix(".linear.app") else {
+            return
+        }
+
         // Convert web URL to Linear desktop app URL
         // https://linear.app/team/issue/ENG-123 -> linear://team/issue/ENG-123
         let desktopURL = issue.url.replacingOccurrences(of: "https://linear.app/", with: "linear://")
