@@ -12,6 +12,17 @@ final class IssuesViewModel: ObservableObject {
     @Published private(set) var todoIssues: [Issue] = []
     @Published private(set) var backlogIssues: [Issue] = []
 
+    @Published private(set) var favorites: [Favorite] = []
+    @Published private(set) var projects: [Project] = []
+
+    // Project view state
+    @Published var selectedProject: Project?
+    @Published private(set) var projectReadyToMergeIssues: [Issue] = []
+    @Published private(set) var projectInReviewIssues: [Issue] = []
+    @Published private(set) var projectInProgressIssues: [Issue] = []
+    @Published private(set) var projectTodoIssues: [Issue] = []
+    @Published private(set) var projectBacklogIssues: [Issue] = []
+
     @Published private(set) var isLoading = false
     @Published private(set) var error: String?
     @Published private(set) var lastUpdated: Date?
@@ -34,6 +45,10 @@ final class IssuesViewModel: ObservableObject {
 
     var totalIssueCount: Int {
         readyToMergeIssues.count + inReviewIssues.count + inProgressIssues.count + todoIssues.count + backlogIssues.count
+    }
+
+    var projectTotalIssueCount: Int {
+        projectReadyToMergeIssues.count + projectInReviewIssues.count + projectInProgressIssues.count + projectTodoIssues.count + projectBacklogIssues.count
     }
 
     var lastUpdatedText: String {
@@ -61,8 +76,15 @@ final class IssuesViewModel: ObservableObject {
         error = nil
 
         do {
-            let issues = try await apiService.fetchAssignedIssues()
+            async let issuesTask = apiService.fetchAssignedIssues()
+            async let favoritesTask = apiService.fetchFavorites()
+            async let projectsTask = apiService.fetchProjects()
+
+            let (issues, fetchedFavorites, fetchedProjects) = try await (issuesTask, favoritesTask, projectsTask)
+
             groupAndSortIssues(issues)
+            favorites = fetchedFavorites
+            projects = fetchedProjects
             lastUpdated = Date()
         } catch let apiError as LinearAPIError {
             error = apiError.errorDescription
@@ -112,6 +134,51 @@ final class IssuesViewModel: ObservableObject {
         }
     }
 
+    func openCompose() {
+        // Opens Linear's native issue creation via linear.new
+        if let url = URL(string: "https://linear.new") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    func openFavorite(_ favorite: Favorite) {
+        guard let urlString = favorite.url else { return }
+
+        // Convert web URL to Linear desktop app URL
+        let desktopURL = urlString.replacingOccurrences(of: "https://linear.app/", with: "linear://")
+
+        if let url = URL(string: desktopURL) {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    func selectProject(_ project: Project?) async {
+        selectedProject = project
+
+        if let project = project {
+            isLoading = true
+            do {
+                let issues = try await apiService.fetchProjectIssues(projectId: project.id)
+                groupAndSortProjectIssues(issues)
+            } catch let apiError as LinearAPIError {
+                error = apiError.errorDescription
+            } catch {
+                self.error = error.localizedDescription
+            }
+            isLoading = false
+        } else {
+            clearProjectIssues()
+        }
+    }
+
+    func clearProjectIssues() {
+        projectReadyToMergeIssues = []
+        projectInReviewIssues = []
+        projectInProgressIssues = []
+        projectTodoIssues = []
+        projectBacklogIssues = []
+    }
+
     // MARK: - Private Methods
 
     private func groupAndSortIssues(_ issues: [Issue]) {
@@ -159,6 +226,48 @@ final class IssuesViewModel: ObservableObject {
         inProgressIssues = inProgress.sorted(by: sortByPriority)
         todoIssues = todo.sorted(by: sortByPriority)
         backlogIssues = backlog.sorted(by: sortByPriority)
+    }
+
+    private func groupAndSortProjectIssues(_ issues: [Issue]) {
+        var readyToMerge: [Issue] = []
+        var inReview: [Issue] = []
+        var inProgress: [Issue] = []
+        var todo: [Issue] = []
+        var backlog: [Issue] = []
+
+        for issue in issues {
+            let stateType = issue.state.stateType
+
+            switch stateType {
+            case .started:
+                switch issue.state.name {
+                case "Ready to Merge":
+                    readyToMerge.append(issue)
+                case "In Review":
+                    inReview.append(issue)
+                default:
+                    inProgress.append(issue)
+                }
+            case .unstarted:
+                todo.append(issue)
+            case .backlog:
+                backlog.append(issue)
+            case nil:
+                continue
+            }
+        }
+
+        let sortByPriority: (Issue, Issue) -> Bool = { a, b in
+            if a.priority == 0 { return false }
+            if b.priority == 0 { return true }
+            return a.priority < b.priority
+        }
+
+        projectReadyToMergeIssues = readyToMerge.sorted(by: sortByPriority)
+        projectInReviewIssues = inReview.sorted(by: sortByPriority)
+        projectInProgressIssues = inProgress.sorted(by: sortByPriority)
+        projectTodoIssues = todo.sorted(by: sortByPriority)
+        projectBacklogIssues = backlog.sorted(by: sortByPriority)
     }
 
     private func setupAutoRefresh() {

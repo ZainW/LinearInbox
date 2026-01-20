@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		BF8B18C12F1A84260072B8BD /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = BF173B002F0C2000003802F6 /* KeyboardShortcuts */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		BF173AF02F0C1513003802F6 /* LinearInbox.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LinearInbox.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF8B18C12F1A84260072B8BD /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = LinearInbox;
 			packageProductDependencies = (
+				BF173B002F0C2000003802F6 /* KeyboardShortcuts */,
 			);
 			productName = LinearInbox;
 			productReference = BF173AF02F0C1513003802F6 /* LinearInbox.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = BF173AE72F0C1513003802F6;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BF173AFF2F0C2000003802F6 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BF173AF12F0C1513003802F6 /* Products */;
 			projectDirPath = "";
@@ -331,6 +340,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BF173AFF2F0C2000003802F6 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BF173B002F0C2000003802F6 /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BF173AFF2F0C2000003802F6 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BF173AE82F0C1513003802F6 /* Project object */;
 }

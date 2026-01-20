@@ -1,10 +1,13 @@
 import SwiftUI
+import KeyboardShortcuts
 
 struct SettingsView: View {
     @ObservedObject var viewModel: IssuesViewModel
     @State private var apiKey = ""
     @State private var errorMessage: String?
     @State private var showingClearConfirmation = false
+    @State private var launchAtLogin = LoginItemService.shared.isEnabled
+    @State private var loginItemError: String?
 
     @AppStorage("autoRefreshInterval") private var autoRefreshInterval: Double = 300
 
@@ -84,6 +87,53 @@ struct SettingsView: View {
                 .pickerStyle(.menu)
                 .onChange(of: autoRefreshInterval) { _, newValue in
                     viewModel.updateAutoRefreshInterval(newValue)
+                }
+            }
+
+            Divider()
+
+            // Keyboard Shortcut Section
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Global Shortcut")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                HStack {
+                    Text("Open Linear Inbox")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Spacer()
+
+                    KeyboardShortcuts.Recorder(for: .openLinearInbox)
+                }
+            }
+
+            Divider()
+
+            // Launch at Login Section
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Startup")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Toggle("Launch at login", isOn: $launchAtLogin)
+                    .toggleStyle(.switch)
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        do {
+                            try LoginItemService.shared.setEnabled(newValue)
+                            loginItemError = nil
+                        } catch {
+                            loginItemError = "Failed to update login item"
+                            // Revert the toggle
+                            launchAtLogin = !newValue
+                        }
+                    }
+
+                if let error = loginItemError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
                 }
             }
 
