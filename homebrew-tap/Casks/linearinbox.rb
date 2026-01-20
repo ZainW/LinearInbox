@@ -1,6 +1,6 @@
 cask 'linearinbox' do
   version '1.0'
-  sha256 'PENDING_FIRST_RELEASE'
+  sha256 'fed9c2e126c21c7c270e6c4011b2c42ac599ebdec4ab9b10213a3a72238b64ea'
 
   url "https://github.com/ZainW/LinearInbox/releases/download/v#{version}/LinearInbox-#{version}.dmg"
   name 'LinearInbox'
@@ -11,16 +11,14 @@ cask 'linearinbox' do
 
   app 'LinearInbox.app'
 
+  postflight do
+    system_command '/usr/bin/xattr',
+                   args: ['-cr', "#{appdir}/LinearInbox.app"],
+                   sudo: false
+  end
+
   zap trash: [
     '~/Library/Preferences/com.zain.LinearInbox.plist',
     '~/Library/Application Support/com.zain.LinearInbox'
   ]
-
-  caveats <<~EOS
-    LinearInbox is an unsigned app. On first launch:
-    1. Right-click the app and select "Open"
-    2. Click "Open" in the dialog that appears
-
-    Or allow it in System Settings > Privacy & Security.
-  EOS
 end
